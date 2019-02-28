@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import '../config/http_headers.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -8,7 +7,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String showText = '还没有数据';
+  TextEditingController carSelectController = TextEditingController();
+  String showText = '欢迎来到至尊商城，敬请期待您的选择';
+  FocusNode secondTextFieldNode = FocusNode();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,20 +20,31 @@ class _HomePageState extends State<HomePage> {
       //解决点击文本输入框时，键盘弹出文本框被覆盖问题。
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
-        title: Text('伪造请求头'),
+        title: Text('至尊商城'),
       ),
       body: SingleChildScrollView(
         child: Container(
             padding: EdgeInsets.all(16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[                
+              children: <Widget>[
+                TextField(
+                  controller: carSelectController,
+                  decoration: InputDecoration(
+                    helperText: '请选择您的最爱',
+                    hintText: '任君选用',
+                  ),
+                  autofocus: false,
+                  focusNode: secondTextFieldNode,
+                ),
                 RaisedButton(
-                  child: Text('请求数据'),
+                  child: Text('随意选'),
                   onPressed: _selectBest,
                 ),
                 Text(
                   showText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                ],
             )),
@@ -41,25 +53,35 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _selectBest() {
-    print('正在请求数据中-------');
-      getHttp().then((value) {
+    print('正在根据您的选择进行挑选-------');
+    String type = carSelectController.text.toString();
+    if (type == '') {
+      showDialog(
+          context: context,
+          builder: (context) {
+            AlertDialog(
+              title: Text('选择类型不能为空'),
+            );
+          });
+    } else {
+      getHttp(type).then((value) {
         setState(() {
-          showText = value['data'].toString();
+          showText = value['data']['name'];
         });
       });
     }
   }
 
-  Future getHttp() async {
+  Future getHttp(String name) async {
     Dio dio = Dio();
-    dio.options.headers=hettpHeaders;
     try {
       Response response = await dio.get(
-          'https://time.geekbang.org/serv/v1/column/newAll');
+          'https://www.easy-mock.com/mock/5c60131a4bed3a6342711498/baixing/dabaojian',
+          queryParameters: {'name': name});
       print(response);
       return response.data;
     } catch (e) {
-      return print(e);
+      return e;
     }
   }
-
+}
