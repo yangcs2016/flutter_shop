@@ -1,65 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-import '../config/http_headers.dart';
+import '../services/service_method.dart';
+import 'package:flutter_swiper/flutter_swiper.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
-  @override
+  final Widget child;
+
+  HomePage({Key key, this.child}) : super(key: key);
+
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  String showText = '还没有数据';
+  String homePageContent ='正在获取数据';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //控制界面内容 body 是否重新布局来避免底部被覆盖了，比如当键盘显示的时候，重新布局避免被键盘盖住内容。默认值为 true。
-      //显示 snackbar 或者 bottom sheet 的时候，需要使用当前的 BuildContext 参数调用 Scaffold.of 函数来获取 ScaffoldState 对象，
-      //然后使用 ScaffoldState.showSnackBar 和 ScaffoldState.showBottomSheet 函数来显示。
-      //Read more: http://blog.chengyunfeng.com/?p=1042#ixzz5gDkHKuMF
-      //解决点击文本输入框时，键盘弹出文本框被覆盖问题。
-      resizeToAvoidBottomPadding: false,
       appBar: AppBar(
-        title: Text('伪造请求头'),
+        title: Text('百姓生活+'),
       ),
-      body: SingleChildScrollView(
-        child: Container(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[                
-                RaisedButton(
-                  child: Text('请求数据'),
-                  onPressed: _selectBest,
-                ),
-                Text(
-                  showText,
-                ),
-               ],
-            )),
+      body: FutureBuilder(
+        future: getHomePageContent(),
+        builder: (context,snapshot){
+          if(snapshot.hasData){
+            var data=json.decode(snapshot.data.toString());
+            List<Map> swiper=(data['data']['slides'] as List).cast();
+            return Column(
+              children:<Widget>[
+                SwiperDiy(swiperDataList: swiper,)
+                ],              
+            );
+          } else {
+            return Center(
+              child: Text('加载中....'),
+            );
+          }
+        },
       ),
     );
   }
+}
+//首页轮播组件
+class SwiperDiy extends StatelessWidget {
+  final List swiperDataList;
 
-  void _selectBest() {
-    print('正在请求数据中-------');
-      getHttp().then((value) {
-        setState(() {
-          showText = value['data'].toString();
-        });
-      });
-    }
+  SwiperDiy({Key key, this.swiperDataList}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 333,
+      child: Swiper(
+        itemBuilder: (BuildContext context,int index){
+          return Container(
+            padding: const EdgeInsets.all(16.0),
+            child: Image.network("${swiperDataList[index]['image']}",fit: BoxFit.fitHeight,),
+          );          
+        },
+        itemCount: swiperDataList.length,
+        pagination: SwiperPagination(),
+        autoplay: true,
+      ),
+    );
   }
-
-  Future getHttp() async {
-    Dio dio = Dio();
-    dio.options.headers=hettpHeaders;
-    try {
-      Response response = await dio.get(
-          'https://time.geekbang.org/serv/v1/column/newAll');
-      print(response);
-      return response.data;
-    } catch (e) {
-      return print(e);
-    }
-  }
-
+}
