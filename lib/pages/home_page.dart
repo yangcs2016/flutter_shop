@@ -13,7 +13,15 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
+  //保持网页数据
+  @override
+  bool get wantKeepAlive =>true;
+  @override
+  void initState(){
+    super.initState();
+    print('object');
+  }
   String homePageContent ='正在获取数据';
   @override
   Widget build(BuildContext context) {
@@ -184,7 +192,7 @@ class Recommend extends StatelessWidget {
           color: Colors.white,
           border: Border(
             left: BorderSide(
-              width: 0.5,
+              width: 1.0,
               color: Colors.black12
             )
           )
